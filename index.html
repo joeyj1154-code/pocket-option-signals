@@ -1,0 +1,1053 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pocket Option Signal Pro | Binary Trading Intelligence</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --pocket-primary: #00D4AA;
+            --pocket-dark: #0D1117;
+            --pocket-card: #161B22;
+            --pocket-border: #30363D;
+            --pocket-red: #FF4757;
+            --pocket-gold: #FFD700;
+            --pocket-purple: #A855F7;
+        }
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--pocket-dark);
+            color: #E6EDF3;
+        }
+        
+        .font-mono { font-family: 'JetBrains Mono', monospace; }
+        
+        .binary-card {
+            background: var(--pocket-card);
+            border: 1px solid var(--pocket-border);
+            box-shadow: 0 4px 12px rgba(0, 212, 170, 0.05);
+            transition: all 0.3s ease;
+        }
+        
+        .binary-card:hover {
+            border-color: var(--pocket-primary);
+            box-shadow: 0 0 20px rgba(0, 212, 170, 0.15);
+            transform: translateY(-2px);
+        }
+        
+        .pocket-btn {
+            background: var(--pocket-primary);
+            color: #000;
+            font-weight: 800;
+            transition: all 0.2s;
+        }
+        
+        .pocket-btn:hover {
+            background: #00FFC2;
+            transform: scale(1.02);
+            box-shadow: 0 0 20px rgba(0, 212, 170, 0.4);
+        }
+        
+        .call-color { color: var(--pocket-primary); }
+        .put-color { color: var(--pocket-red); }
+        .bg-call { background-color: rgba(0, 212, 170, 0.15); }
+        .bg-put { background-color: rgba(255, 71, 87, 0.15); }
+        .border-call { border-color: var(--pocket-primary); }
+        .border-put { border-color: var(--pocket-red); }
+        
+        .turbo-timer { position: relative; overflow: hidden; }
+        
+        .timer-bar {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--pocket-primary), var(--pocket-gold));
+            transition: width 1s linear;
+        }
+        
+        @keyframes pulse-signal {
+            0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(0, 212, 170, 0.4); }
+            50% { opacity: 0.9; box-shadow: 0 0 20px 5px rgba(0, 212, 170, 0.2); }
+        }
+        
+        .signal-active { animation: pulse-signal 2s infinite; }
+        
+        .martingale-row {
+            background: linear-gradient(90deg, rgba(0, 212, 170, 0.05), transparent);
+            border-left: 3px solid var(--pocket-primary);
+        }
+        
+        .martingale-loss {
+            background: linear-gradient(90deg, rgba(255, 71, 87, 0.05), transparent);
+            border-left: 3px solid var(--pocket-red);
+        }
+        
+        .otc-badge {
+            background: linear-gradient(135deg, var(--pocket-purple), #8B5CF6);
+            font-size: 0.6rem;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-weight: 800;
+            text-transform: uppercase;
+        }
+        
+        .accuracy-ring { position: relative; width: 50px; height: 50px; }
+        .accuracy-ring svg { transform: rotate(-90deg); }
+        .accuracy-ring circle { fill: none; stroke-width: 4; }
+        .accuracy-bg { stroke: #30363D; }
+        .accuracy-progress { stroke-linecap: round; transition: stroke-dashoffset 0.5s ease; }
+        
+        .streak-flame {
+            color: #FF6B35;
+            animation: flicker 1.5s infinite alternate;
+        }
+        
+        @keyframes flicker {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.8; transform: scale(1.1); }
+        }
+        
+        .tf-pill {
+            background: #21262D;
+            border: 1px solid #30363D;
+            transition: all 0.2s;
+        }
+        
+        .tf-pill.active {
+            background: var(--pocket-primary);
+            color: #000;
+            border-color: var(--pocket-primary);
+            font-weight: 700;
+        }
+        
+        .strength-meter {
+            background: linear-gradient(90deg, var(--pocket-red) 0%, #FFD700 50%, var(--pocket-primary) 100%);
+            height: 4px;
+            border-radius: 2px;
+            position: relative;
+        }
+        
+        .strength-indicator {
+            position: absolute;
+            top: -4px;
+            width: 12px;
+            height: 12px;
+            background: #fff;
+            border: 2px solid var(--pocket-dark);
+            border-radius: 50%;
+            transform: translateX(-50%);
+            transition: left 0.5s ease;
+            box-shadow: 0 0 10px rgba(255,255,255,0.5);
+        }
+        
+        .candle-preview {
+            display: flex;
+            align-items: flex-end;
+            height: 40px;
+            gap: 2px;
+            padding: 0 4px;
+        }
+        
+        .candle {
+            width: 6px;
+            border-radius: 1px;
+            transition: all 0.3s;
+        }
+        
+        .candle-up { background: var(--pocket-primary); }
+        .candle-down { background: var(--pocket-red); }
+        
+        .news-ticker {
+            background: rgba(255, 215, 0, 0.1);
+            border-left: 3px solid var(--pocket-gold);
+        }
+        
+        .market-session {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+        
+        .session-london { background: rgba(0, 212, 170, 0.2); color: var(--pocket-primary); }
+        .session-ny { background: rgba(255, 215, 0, 0.2); color: var(--pocket-gold); }
+        .session-asia { background: rgba(168, 85, 247, 0.2); color: var(--pocket-purple); }
+        .session-closed { background: rgba(100, 116, 139, 0.2); color: #64748B; }
+        
+        .result-win {
+            background: linear-gradient(135deg, rgba(0, 212, 170, 0.2), rgba(0, 212, 170, 0.05));
+            border: 2px solid var(--pocket-primary);
+        }
+        
+        .result-loss {
+            background: linear-gradient(135deg, rgba(255, 71, 87, 0.2), rgba(255, 71, 87, 0.05));
+            border: 2px solid var(--pocket-red);
+        }
+        
+        .indicator-bar {
+            height: 6px;
+            background: #30363D;
+            border-radius: 3px;
+            overflow: hidden;
+        }
+        
+        .indicator-fill {
+            height: 100%;
+            border-radius: 3px;
+            transition: width 0.5s ease;
+        }
+    </style>
+</head>
+<body class="min-h-screen bg-[#0D1117]">
+    <!-- Header -->
+    <header class="fixed top-0 w-full z-50 bg-[#161B22] border-b border-[#30363D]">
+        <div class="max-w-[1920px] mx-auto px-4">
+            <div class="flex justify-between items-center h-14">
+                <div class="flex items-center space-x-4">
+                    <div class="flex items-center space-x-2">
+                        <div class="w-8 h-8 bg-gradient-to-br from-[#00D4AA] to-[#00FFC2] rounded-lg flex items-center justify-center shadow-lg shadow-[#00D4AA]/20">
+                            <span class="text-black font-black text-lg">P</span>
+                        </div>
+                        <div>
+                            <span class="font-black text-xl tracking-tight text-white">Pocket<span class="text-[#00D4AA]">Signal</span></span>
+                            <span class="text-[10px] text-gray-500 block -mt-1">Binary Options Pro</span>
+                        </div>
+                    </div>
+                    
+                    <div class="hidden md:flex items-center space-x-1 bg-[#0D1117] rounded-lg p-1 border border-[#30363D]">
+                        <button onclick="setMarket('forex')" class="market-btn px-3 py-1.5 rounded-md text-xs font-bold bg-[#00D4AA] text-black transition-all" data-market="forex">Forex</button>
+                        <button onclick="setMarket('otc')" class="market-btn px-3 py-1.5 rounded-md text-xs font-bold text-gray-400 hover:text-white transition-all" data-market="otc">OTC</button>
+                        <button onclick="setMarket('crypto')" class="market-btn px-3 py-1.5 rounded-md text-xs font-bold text-gray-400 hover:text-white transition-all" data-market="crypto">Crypto</button>
+                    </div>
+                </div>
+
+                <div class="flex items-center space-x-4">
+                    <div class="hidden lg:flex items-center space-x-3 text-xs">
+                        <div class="market-session session-ny" id="marketSession">
+                            <span class="w-2 h-2 rounded-full bg-[#FFD700] animate-pulse"></span>
+                            <span>New York Open</span>
+                        </div>
+                        <div class="h-4 w-px bg-[#30363D]"></div>
+                        <div class="text-gray-400">
+                            Volatility: <span class="text-[#FFD700] font-mono font-bold">High</span>
+                        </div>
+                    </div>
+                    
+                    <button onclick="connectPocketOption()" class="pocket-btn px-4 py-2 rounded-lg text-xs font-bold flex items-center space-x-2">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                        </svg>
+                        <span>Connect PO</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Sub-header: Timeframes & Stats -->
+    <div class="fixed top-14 w-full bg-[#0D1117] border-b border-[#30363D] z-40">
+        <div class="max-w-[1920px] mx-auto px-4 py-2 flex items-center justify-between">
+            <div class="flex items-center space-x-2">
+                <span class="text-[10px] text-gray-500 uppercase font-bold mr-2">Expiry Time</span>
+                <button onclick="setTimeframe(60)" class="tf-pill px-3 py-1 rounded-full text-xs font-bold active" data-tf="60">M1</button>
+                <button onclick="setTimeframe(300)" class="tf-pill px-3 py-1 rounded-full text-xs font-bold" data-tf="300">M5</button>
+                <button onclick="setTimeframe(900)" class="tf-pill px-3 py-1 rounded-full text-xs font-bold" data-tf="900">M15</button>
+                <button onclick="setTimeframe(1800)" class="tf-pill px-3 py-1 rounded-full text-xs font-bold" data-tf="1800">M30</button>
+            </div>
+            
+            <div class="flex items-center space-x-4 text-xs">
+                <div class="flex items-center space-x-1">
+                    <span class="text-gray-500">Daily Win Rate:</span>
+                    <span class="font-mono font-bold text-[#00D4AA]" id="dailyWinRate">87.4%</span>
+                </div>
+                <div class="flex items-center space-x-1">
+                    <span class="streak-flame">🔥</span>
+                    <span class="font-mono font-bold text-white" id="currentStreak">12 Wins</span>
+                </div>
+                <div class="flex items-center space-x-1">
+                    <span class="text-gray-500">Active Signals:</span>
+                    <span class="font-mono font-bold text-[#FFD700]" id="activeSignalCount">8</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <main class="pt-28 pb-4 px-4 max-w-[1920px] mx-auto">
+        
+        <!-- Top Stats Cards -->
+        <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3 mb-4">
+            <div class="binary-card rounded-lg p-3">
+                <div class="text-[10px] text-gray-500 uppercase mb-1">Account Balance</div>
+                <div class="font-mono font-bold text-white text-lg">$1,247.50</div>
+                <div class="text-[10px] text-[#00D4AA]">+$89.00 today</div>
+            </div>
+            <div class="binary-card rounded-lg p-3">
+                <div class="text-[10px] text-gray-500 uppercase mb-1">Today's Trades</div>
+                <div class="font-mono font-bold text-white text-lg">24</div>
+                <div class="text-[10px] text-[#00D4AA]">21 Wins / 3 Loss</div>
+            </div>
+            <div class="binary-card rounded-lg p-3">
+                <div class="text-[10px] text-gray-500 uppercase mb-1">Profit Today</div>
+                <div class="font-mono font-bold text-[#00D4AA] text-lg">+$189.00</div>
+                <div class="text-[10px] text-gray-500">87.5% Win Rate</div>
+            </div>
+            <div class="binary-card rounded-lg p-3">
+                <div class="text-[10px] text-gray-500 uppercase mb-1">Best Strategy</div>
+                <div class="font-mono font-bold text-[#FFD700] text-lg">RSI 80/20</div>
+                <div class="text-[10px] text-gray-500">94.2% Accuracy</div>
+            </div>
+            <div class="binary-card rounded-lg p-3 border border-[#FFD700]/30">
+                <div class="text-[10px] text-[#FFD700] uppercase mb-1">VIP Signal</div>
+                <div class="font-mono font-bold text-white text-lg">EUR/USD</div>
+                <div class="text-[10px] text-[#00D4AA]">CALL in 2m</div>
+            </div>
+            <div class="binary-card rounded-lg p-3">
+                <div class="text-[10px] text-gray-500 uppercase mb-1">Next Candle</div>
+                <div class="font-mono font-bold text-white text-lg" id="nextCandle">0:42</div>
+                <div class="text-[10px] text-[#FFD700]">M1 Chart</div>
+            </div>
+        </div>
+
+        <!-- News/Alert Ticker -->
+        <div class="news-ticker rounded-lg p-3 mb-4 flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <svg class="w-5 h-5 text-[#FFD700]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                </svg>
+                <div class="text-xs">
+                    <span class="text-[#FFD700] font-bold">High Impact News:</span>
+                    <span class="text-gray-300">USD Non-Farm Payrolls in 15 minutes - Volatility Expected</span>
+                </div>
+            </div>
+            <button onclick="pauseNews()" class="text-gray-500 hover:text-white">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                </svg>
+            </button>
+        </div>
+
+        <div class="grid grid-cols-1 xl:grid-cols-3 gap-4">
+            
+            <!-- Left Column: Signal Feed -->
+            <div class="xl:col-span-2 space-y-3">
+                
+                <!-- Filter Bar -->
+                <div class="binary-card rounded-lg p-3 flex flex-wrap gap-2 items-center justify-between">
+                    <div class="flex space-x-2">
+                        <button onclick="filterBinarySignals('all')" class="binary-filter px-3 py-1.5 rounded-lg text-xs font-bold bg-[#00D4AA] text-black" data-filter="all">ALL</button>
+                        <button onclick="filterBinarySignals('call')" class="binary-filter px-3 py-1.5 rounded-lg text-xs font-bold bg-[#161B22] text-gray-400 border border-[#30363D]" data-filter="call">CALL Only</button>
+                        <button onclick="filterBinarySignals('put')" class="binary-filter px-3 py-1.5 rounded-lg text-xs font-bold bg-[#161B22] text-gray-400 border border-[#30363D]" data-filter="put">PUT Only</button>
+                    </div>
+                    
+                    <div class="flex items-center space-x-3">
+                        <label class="flex items-center space-x-2 cursor-pointer">
+                            <input type="checkbox" id="martingaleMode" class="hidden" onchange="toggleMartingale()">
+                            <div class="w-8 h-4 bg-[#30363D] rounded-full relative transition-colors" id="martingaleToggle">
+                                <div class="w-3 h-3 bg-white rounded-full absolute top-0.5 left-0.5 transition-transform" id="martingaleDot"></div>
+                            </div>
+                            <span class="text-xs text-gray-400">Martingale</span>
+                        </label>
+                        
+                        <label class="flex items-center space-x-2 cursor-pointer">
+                            <input type="checkbox" id="autoTrade" class="hidden">
+                            <div class="w-8 h-4 bg-[#30363D] rounded-full relative">
+                                <div class="w-3 h-3 bg-white rounded-full absolute top-0.5 left-0.5 transition-transform"></div>
+                            </div>
+                            <span class="text-xs text-gray-400">Auto</span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Signals Grid -->
+                <div id="binarySignalsGrid" class="grid grid-cols-1 md:grid-cols-2 gap-3 max-h-[700px] overflow-y-auto pr-1">
+                    <!-- Signals injected here -->
+                </div>
+
+                <!-- Strategy Performance -->
+                <div class="binary-card rounded-lg p-4">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-sm font-bold text-white">Binary Strategy Performance</h3>
+                        <div class="flex space-x-2">
+                            <span class="text-[10px] px-2 py-1 rounded bg-[#00D4AA]/20 text-[#00D4AA]">OTC: 89%</span>
+                            <span class="text-[10px] px-2 py-1 rounded bg-[#FFD700]/20 text-[#FFD700]">Forex: 85%</span>
+                        </div>
+                    </div>
+                    <div class="h-48">
+                        <canvas id="binaryPerformanceChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Column: Tools -->
+            <div class="space-y-4">
+                
+                <!-- Martingale Calculator -->
+                <div class="binary-card rounded-lg p-4">
+                    <div class="flex justify-between items-center mb-3">
+                        <span class="text-sm font-bold text-white">Martingale Calculator</span>
+                        <span class="text-[10px] text-[#FFD700]">3 Step Max</span>
+                    </div>
+                    
+                    <div class="space-y-2 mb-3">
+                        <div>
+                            <label class="text-[10px] text-gray-500 uppercase mb-1 block">Initial Stake ($)</label>
+                            <input type="number" id="mgStake" value="10" class="w-full bg-[#0D1117] border border-[#30363D] rounded px-3 py-2 text-sm font-mono text-white focus:border-[#00D4AA] focus:outline-none" oninput="calculateMartingale()">
+                        </div>
+                        <div>
+                            <label class="text-[10px] text-gray-500 uppercase mb-1 block">Payout %</label>
+                            <input type="number" id="mgPayout" value="87" class="w-full bg-[#0D1117] border border-[#30363D] rounded px-3 py-2 text-sm font-mono text-white focus:border-[#00D4AA] focus:outline-none" oninput="calculateMartingale()">
+                        </div>
+                    </div>
+
+                    <div class="space-y-1" id="martingaleSteps">
+                        <!-- Steps calculated here -->
+                    </div>
+
+                    <div class="mt-3 pt-3 border-t border-[#30363D]">
+                        <div class="flex justify-between text-xs">
+                            <span class="text-gray-500">Total Risk:</span>
+                            <span class="font-mono font-bold text-[#FF4757]" id="totalRisk">$77.00</span>
+                        </div>
+                        <div class="flex justify-between text-xs mt-1">
+                            <span class="text-gray-500">Profit if Win:</span>
+                            <span class="font-mono font-bold text-[#00D4AA]" id="totalProfit">$8.70</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Quick Trade -->
+                <div class="binary-card rounded-lg p-4">
+                    <div class="text-sm font-bold text-white mb-3">Quick Trade</div>
+                    
+                    <div class="grid grid-cols-2 gap-2 mb-3">
+                        <div>
+                            <label class="text-[10px] text-gray-500 uppercase mb-1 block">Pair</label>
+                            <select id="quickPair" class="w-full bg-[#0D1117] border border-[#30363D] rounded px-2 py-2 text-xs text-white focus:border-[#00D4AA] focus:outline-none">
+                                <option>EUR/USD</option>
+                                <option>GBP/USD</option>
+                                <option>USD/JPY</option>
+                                <option>USD/CAD</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="text-[10px] text-gray-500 uppercase mb-1 block">Amount ($)</label>
+                            <input type="number" id="quickAmount" value="10" class="w-full bg-[#0D1117] border border-[#30363D] rounded px-2 py-2 text-xs font-mono text-white focus:border-[#00D4AA] focus:outline-none">
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-2">
+                        <button onclick="quickTrade('CALL')" class="bg-[#00D4AA] hover:bg-[#00FFC2] text-black py-3 rounded-lg font-bold text-sm transition-all transform active:scale-95 flex flex-col items-center">
+                            <span class="text-xs">CALL</span>
+                            <span class="text-[10px] opacity-80">▲ Higher</span>
+                        </button>
+                        <button onclick="quickTrade('PUT')" class="bg-[#FF4757] hover:bg-[#FF6B7A] text-white py-3 rounded-lg font-bold text-sm transition-all transform active:scale-95 flex flex-col items-center">
+                            <span class="text-xs">PUT</span>
+                            <span class="text-[10px] opacity-80">▼ Lower</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Signal History -->
+                <div class="binary-card rounded-lg p-4">
+                    <div class="flex justify-between items-center mb-3">
+                        <span class="text-sm font-bold text-white">Recent Results</span>
+                        <button onclick="clearHistory()" class="text-[10px] text-gray-500 hover:text-white">Clear</button>
+                    </div>
+                    
+                    <div class="space-y-1 max-h-[200px] overflow-y-auto" id="tradeHistory">
+                        <!-- History items -->
+                    </div>
+                </div>
+
+                <!-- Best Times to Trade -->
+                <div class="binary-card rounded-lg p-4">
+                    <div class="text-sm font-bold text-white mb-3">Market Sessions</div>
+                    <div class="space-y-2 text-xs">
+                        <div class="flex justify-between items-center p-2 rounded bg-[#00D4AA]/10 border border-[#00D4AA]/30">
+                            <div class="flex items-center space-x-2">
+                                <span class="w-2 h-2 rounded-full bg-[#00D4AA] animate-pulse"></span>
+                                <span class="text-[#00D4AA] font-bold">London</span>
+                            </div>
+                            <span class="text-gray-400">08:00 - 16:00 UTC</span>
+                        </div>
+                        <div class="flex justify-between items-center p-2 rounded bg-[#FFD700]/10 border border-[#FFD700]/30">
+                            <div class="flex items-center space-x-2">
+                                <span class="w-2 h-2 rounded-full bg-[#FFD700] animate-pulse"></span>
+                                <span class="text-[#FFD700] font-bold">New York</span>
+                            </div>
+                            <span class="text-gray-400">13:00 - 21:00 UTC</span>
+                        </div>
+                        <div class="flex justify-between items-center p-2 rounded bg-[#A855F7]/10 opacity-50">
+                            <div class="flex items-center space-x-2">
+                                <span class="w-2 h-2 rounded-full bg-[#A855F7]"></span>
+                                <span class="text-[#A855F7]">Tokyo</span>
+                            </div>
+                            <span class="text-gray-500">Closed</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Risk Warning -->
+                <div class="bg-[#FF4757]/10 border border-[#FF4757]/30 rounded-lg p-3">
+                    <div class="flex items-start space-x-2">
+                        <svg class="w-4 h-4 text-[#FF4757] mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                        </svg>
+                        <div class="text-[10px] text-gray-300 leading-relaxed">
+                            <strong class="text-[#FF4757]">Risk Warning:</strong> Binary options trading involves high risk. Never trade with money you cannot afford to lose. Past performance does not guarantee future results.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Trade Result Modal -->
+    <div id="resultModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden flex items-center justify-center">
+        <div class="binary-card rounded-xl p-6 max-w-sm w-full mx-4 transform scale-95 opacity-0 transition-all duration-300" id="resultContent">
+            <div class="text-center">
+                <div class="w-16 h-16 rounded-full mx-auto mb-4 flex items-center justify-center text-3xl" id="resultIcon">🎉</div>
+                <h3 class="text-2xl font-black mb-2" id="resultTitle">Trade Won!</h3>
+                <div class="text-4xl font-mono font-bold mb-4" id="resultAmount">+$8.70</div>
+                <div class="text-sm text-gray-400 mb-6" id="resultDetails">EUR/USD CALL @ 1.0845</div>
+                <button onclick="closeResult()" class="pocket-btn w-full py-3 rounded-lg font-bold">Continue Trading</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const forexPairs = [
+            { pair: 'EUR/USD', type: 'forex', volatility: 'medium', spread: 0.0001, payout: 87 },
+            { pair: 'GBP/USD', type: 'forex', volatility: 'high', spread: 0.0002, payout: 85 },
+            { pair: 'USD/JPY', type: 'forex', volatility: 'medium', spread: 0.01, payout: 86 },
+            { pair: 'USD/CAD', type: 'forex', volatility: 'high', spread: 0.0002, payout: 84 },
+            { pair: 'AUD/USD', type: 'forex', volatility: 'medium', spread: 0.0001, payout: 85 },
+            { pair: 'EUR/GBP', type: 'forex', volatility: 'low', spread: 0.0001, payout: 82 },
+            { pair: 'EUR/JPY', type: 'forex', volatility: 'high', spread: 0.01, payout: 86 },
+            { pair: 'GBP/JPY', type: 'forex', volatility: 'very_high', spread: 0.02, payout: 88 }
+        ];
+
+        const otcPairs = [
+            { pair: 'EUR/USD (OTC)', type: 'otc', volatility: 'high', payout: 92 },
+            { pair: 'GBP/USD (OTC)', type: 'otc', volatility: 'high', payout: 91 },
+            { pair: 'USD/JPY (OTC)', type: 'otc', volatility: 'high', payout: 90 },
+            { pair: 'USD/CAD (OTC)', type: 'otc', volatility: 'very_high', payout: 93 }
+        ];
+
+        const strategies = [
+            { name: 'RSI 80/20 Reversal', type: 'rsi', accuracy: 94, timeframe: 'M1-M5', bestFor: 'otc' },
+            { name: 'Bollinger Bounce', type: 'bb', accuracy: 89, timeframe: 'M5', bestFor: 'forex' },
+            { name: 'MACD Zero Cross', type: 'macd', accuracy: 87, timeframe: 'M1-M5', bestFor: 'all' },
+            { name: 'Support/Resistance', type: 'sr', accuracy: 91, timeframe: 'M5-M15', bestFor: 'forex' },
+            { name: 'Trend Continuation', type: 'trend', accuracy: 85, timeframe: 'M15', bestFor: 'forex' },
+            { name: 'Pin Bar Reversal', type: 'pinbar', accuracy: 88, timeframe: 'M1-M5', bestFor: 'otc' }
+        ];
+
+        let currentSignals = [];
+        let currentMarket = 'forex';
+        let currentTF = 60;
+        let martingaleEnabled = false;
+        let tradeHistory = [];
+
+        document.addEventListener('DOMContentLoaded', () => {
+            generateBinarySignals();
+            initBinaryChart();
+            calculateMartingale();
+            startCandleTimer();
+            simulateMarketUpdates();
+            addToHistory('EUR/USD', 'CALL', 8.70, true);
+            addToHistory('GBP/USD', 'PUT', -10.00, false);
+            addToHistory('USD/JPY', 'CALL', 8.60, true);
+        });
+
+        function setMarket(market) {
+            currentMarket = market;
+            document.querySelectorAll('.market-btn').forEach(btn => {
+                if(btn.dataset.market === market) {
+                    btn.classList.remove('text-gray-400');
+                    btn.classList.add('bg-[#00D4AA]', 'text-black');
+                } else {
+                    btn.classList.add('text-gray-400');
+                    btn.classList.remove('bg-[#00D4AA]', 'text-black');
+                }
+            });
+            generateBinarySignals();
+        }
+
+        function setTimeframe(seconds) {
+            currentTF = seconds;
+            document.querySelectorAll('.tf-pill').forEach(btn => {
+                if(parseInt(btn.dataset.tf) === seconds) {
+                    btn.classList.add('active');
+                } else {
+                    btn.classList.remove('active');
+                }
+            });
+            generateBinarySignals();
+        }
+
+        function generateBinarySignals() {
+            const pairs = currentMarket === 'otc' ? otcPairs : forexPairs;
+            const tfStr = currentTF < 300 ? 'M1' : currentTF < 900 ? 'M5' : 'M15';
+            
+            currentSignals = pairs.map(pair => {
+                const isCall = Math.random() > 0.5;
+                const strategy = strategies.find(s => s.bestFor === currentMarket || s.bestFor === 'all') || strategies[0];
+                const confidence = Math.floor(75 + Math.random() * 20);
+                const accuracy = (strategy.accuracy + (Math.random() * 4 - 2)).toFixed(1);
+                
+                let price;
+                if(pair.pair.includes('JPY')) {
+                    price = pair.pair.includes('EUR') ? 158 + Math.random() : (pair.pair.includes('GBP') ? 188 + Math.random() : 148 + Math.random());
+                } else {
+                    price = 1.0 + Math.random() * 0.5;
+                }
+                
+                return {
+                    ...pair,
+                    signal: isCall ? 'CALL' : 'PUT',
+                    strategy: strategy.name,
+                    strategyType: strategy.type,
+                    confidence: confidence,
+                    accuracy: parseFloat(accuracy),
+                    price: price,
+                    entry: price,
+                    expiry: currentTF,
+                    expiryTime: new Date(Date.now() + currentTF * 1000),
+                    strength: Math.floor(Math.random() * 40) + 60,
+                    candles: generateCandlePreview(isCall),
+                    isOTC: pair.type === 'otc'
+                };
+            }).sort((a, b) => b.accuracy - a.accuracy);
+
+            renderBinarySignals();
+        }
+
+        function generateCandlePreview(isCall) {
+            let candles = [];
+            let trend = isCall ? 1 : -1;
+            for(let i = 0; i < 5; i++) {
+                const isUp = Math.random() > (isCall ? 0.3 : 0.7);
+                const height = Math.floor(Math.random() * 20) + 10;
+                candles.push({ up: isUp, height: height });
+            }
+            return candles;
+        }
+
+        function renderBinarySignals(filter = 'all') {
+            const grid = document.getElementById('binarySignalsGrid');
+            const filtered = filter === 'all' 
+                ? currentSignals 
+                : currentSignals.filter(s => s.signal.toLowerCase() === filter);
+            
+            grid.innerHTML = filtered.map((sig, idx) => {
+                const isCall = sig.signal === 'CALL';
+                const colorClass = isCall ? 'call-color' : 'put-color';
+                const bgClass = isCall ? 'bg-call border-call' : 'bg-put border-put';
+                const btnClass = isCall ? 'bg-[#00D4AA] hover:bg-[#00FFC2] text-black' : 'bg-[#FF4757] hover:bg-[#FF6B7A] text-white';
+                
+                const candleHTML = sig.candles.map(c => 
+                    `<div class="candle ${c.up ? 'candle-up' : 'candle-down'}" style="height: ${c.height}px"></div>`
+                ).join('');
+                
+                return `
+                    <div class="binary-card rounded-lg p-4 border ${bgClass} signal-active relative overflow-hidden" style="animation-delay: ${idx * 0.1}s">
+                        <div class="timer-bar" style="width: 100%" id="timer-${idx}"></div>
+                        
+                        <div class="flex justify-between items-start mb-3 mt-2">
+                            <div>
+                                <div class="flex items-center space-x-2">
+                                    <h3 class="font-black text-white text-lg">${sig.pair}</h3>
+                                    ${sig.isOTC ? '<span class="otc-badge text-white">OTC</span>' : ''}
+                                </div>
+                                <div class="flex items-center space-x-2 mt-1">
+                                    <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-[#21262D] text-gray-300">${sig.strategy}</span>
+                                    <span class="text-[10px] text-gray-500">${sig.expiry/60}m Expiry</span>
+                                </div>
+                            </div>
+                            <div class="accuracy-ring">
+                                <svg width="50" height="50" viewBox="0 0 50 50">
+                                    <circle class="accuracy-bg" cx="25" cy="25" r="21"/>
+                                    <circle class="accuracy-progress ${isCall ? 'stroke-[#00D4AA]' : 'stroke-[#FF4757]'}" 
+                                            cx="25" cy="25" r="21"
+                                            stroke-dasharray="131.95"
+                                            stroke-dashoffset="${131.95 - (131.95 * sig.accuracy / 100)}"/>
+                                </svg>
+                                <div class="absolute inset-0 flex items-center justify-center">
+                                    <span class="text-xs font-black ${colorClass}">${sig.accuracy}%</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="candle-preview mb-3 bg-[#0D1117] rounded border border-[#30363D]">
+                            ${candleHTML}
+                        </div>
+
+                        <div class="flex justify-center mb-3">
+                            <div class="px-6 py-2 rounded-lg ${isCall ? 'bg-[#00D4AA]/20 border border-[#00D4AA]' : 'bg-[#FF4757]/20 border border-[#FF4757]'}">
+                                <span class="text-2xl font-black ${colorClass}">${sig.signal}</span>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-2 mb-3 text-xs">
+                            <div class="bg-[#0D1117] rounded p-2 border border-[#30363D]">
+                                <div class="text-gray-500 text-[10px]">Current</div>
+                                <div class="font-mono font-bold text-white">${sig.price.toFixed(sig.pair.includes('JPY') ? 2 : 4)}</div>
+                            </div>
+                            <div class="bg-[#0D1117] rounded p-2 border border-[#30363D]">
+                                <div class="text-gray-500 text-[10px]">Payout</div>
+                                <div class="font-mono font-bold text-[#FFD700]">${sig.payout}%</div>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <div class="flex justify-between text-[10px] mb-1">
+                                <span class="text-gray-500">Signal Strength</span>
+                                <span class="${colorClass} font-bold">${sig.strength}%</span>
+                            </div>
+                            <div class="strength-meter rounded-full">
+                                <div class="strength-indicator" style="left: ${sig.strength}%"></div>
+                            </div>
+                        </div>
+
+                        <div class="space-y-1 mb-3">
+                            <div class="flex justify-between items-center text-[10px]">
+                                <span class="text-gray-500">RSI (14)</span>
+                                <span class="font-mono ${isCall ? 'text-[#00D4AA]' : 'text-[#FF4757]'}">${isCall ? '23.4' : '78.9'}</span>
+                            </div>
+                            <div class="flex justify-between items-center text-[10px]">
+                                <span class="text-gray-500">MACD</span>
+                                <span class="font-mono ${isCall ? 'text-[#00D4AA]' : 'text-[#FF4757]'}">${isCall ? 'Bullish Cross' : 'Bearish Cross'}</span>
+                            </div>
+                            <div class="flex justify-between items-center text-[10px]">
+                                <span class="text-gray-500">BB Position</span>
+                                <span class="font-mono ${isCall ? 'text-[#00D4AA]' : 'text-[#FF4757]'}">${isCall ? 'Lower Band' : 'Upper Band'}</span>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-2">
+                            <button onclick="executeBinaryTrade('${sig.pair}', '${sig.signal}', ${sig.payout}, ${idx})" 
+                                    class="${btnClass} py-2.5 rounded-lg font-bold text-xs transition-all transform active:scale-95">
+                                ${sig.signal} NOW
+                            </button>
+                            <button onclick="useInCalculator('${sig.pair}', '${sig.signal}', ${sig.payout})" 
+                                    class="bg-[#21262D] hover:bg-[#30363D] text-white py-2.5 rounded-lg font-bold text-xs transition-all">
+                                CALCULATE
+                            </button>
+                        </div>
+
+                        ${martingaleEnabled ? `
+                        <div class="mt-2 pt-2 border-t border-[#30363D] text-[10px] text-center text-gray-500">
+                            Martingale Step 1: $10 → Potential: $${(10 * sig.payout / 100).toFixed(2)}
+                        </div>
+                        ` : ''}
+                    </div>
+                `;
+            }).join('');
+            
+            document.getElementById('activeSignalCount').textContent = filtered.length;
+        }
+
+        function filterBinarySignals(type) {
+            document.querySelectorAll('.binary-filter').forEach(btn => {
+                if(btn.dataset.filter === type) {
+                    btn.classList.remove('bg-[#161B22]', 'text-gray-400', 'border', 'border-[#30363D]');
+                    btn.classList.add('bg-[#00D4AA]', 'text-black');
+                } else {
+                    btn.classList.add('bg-[#161B22]', 'text-gray-400', 'border', 'border-[#30363D]');
+                    btn.classList.remove('bg-[#00D4AA]', 'text-black');
+                }
+            });
+            renderBinarySignals(type);
+        }
+
+        function toggleMartingale() {
+            martingaleEnabled = !martingaleEnabled;
+            const toggle = document.getElementById('martingaleToggle');
+            const dot = document.getElementById('martingaleDot');
+            
+            if(martingaleEnabled) {
+                toggle.classList.remove('bg-[#30363D]');
+                toggle.classList.add('bg-[#FFD700]');
+                dot.classList.add('translate-x-4');
+                calculateMartingale();
+                showNotification('Martingale Calculator Enabled', 'info');
+            } else {
+                toggle.classList.add('bg-[#30363D]');
+                toggle.classList.remove('bg-[#FFD700]');
+                dot.classList.remove('translate-x-4');
+            }
+            renderBinarySignals(document.querySelector('.binary-filter.bg-\\[\\#00D4AA\\]')?.dataset.filter || 'all');
+        }
+
+        function calculateMartingale() {
+            const stake = parseFloat(document.getElementById('mgStake').value) || 10;
+            const payout = parseFloat(document.getElementById('mgPayout').value) || 87;
+            
+            let steps = [];
+            let currentStake = stake;
+            let totalRisk = 0;
+            
+            for(let i = 1; i <= 3; i++) {
+                const profit = (currentStake * payout / 100).toFixed(2);
+                const cumulative = totalRisk + currentStake;
+                steps.push({
+                    step: i,
+                    stake: currentStake.toFixed(2),
+                    profit: profit,
+                    cumulative: cumulative.toFixed(2),
+                    isLoss: i > 1
+                });
+                totalRisk += currentStake;
+                currentStake *= 2.5;
+            }
+            
+            const finalProfit = (stake * payout / 100).toFixed(2);
+            
+            document.getElementById('martingaleSteps').innerHTML = steps.map(s => `
+                <div class="${s.isLoss ? 'martingale-loss' : 'martingale-row'} rounded p-2 flex justify-between items-center text-xs">
+                    <div class="flex items-center space-x-2">
+                        <span class="font-bold ${s.isLoss ? 'text-[#FF4757]' : 'text-[#00D4AA]'}">Step ${s.step}</span>
+                        <span class="text-gray-400">$${s.stake}</span>
+                    </div>
+                    <div class="text-right">
+                        <div class="text-gray-300">Risk: $${s.cumulative}</div>
+                        <div class="text-[#00D4AA]">Profit: $${s.profit}</div>
+                    </div>
+                </div>
+            `).join('');
+            
+            document.getElementById('totalRisk').textContent = `$${totalRisk.toFixed(2)}`;
+            document.getElementById('totalProfit').textContent = `$${finalProfit}`;
+        }
+
+        function executeBinaryTrade(pair, signal, payout, idx) {
+            const amount = parseFloat(document.getElementById('quickAmount').value) || 10;
+            showNotification(`Executing ${signal} on ${pair}...`, 'info');
+            
+            const won = Math.random() > 0.3;
+            const profit = won ? (amount * payout / 100) : -amount;
+            
+            setTimeout(() => {
+                showResultModal(won, profit, pair, signal, payout);
+                addToHistory(pair, signal, profit, won);
+                updateStats();
+            }, 1500);
+        }
+
+        function quickTrade(signal) {
+            const pair = document.getElementById('quickPair').value;
+            const payout = 87;
+            executeBinaryTrade(pair, signal, payout, -1);
+        }
+
+        function showResultModal(won, amount, pair, signal, payout) {
+            const modal = document.getElementById('resultModal');
+            const content = document.getElementById('resultContent');
+            const icon = document.getElementById('resultIcon');
+            const title = document.getElementById('resultTitle');
+            const amountEl = document.getElementById('resultAmount');
+            const details = document.getElementById('resultDetails');
+            
+            modal.classList.remove('hidden');
+            
+            if(won) {
+                content.className = 'binary-card rounded-xl p-6 max-w-sm w-full mx-4 transform transition-all duration-300 result-win';
+                icon.textContent = '🎉';
+                title.textContent = 'Trade Won!';
+                title.className = 'text-2xl font-black mb-2 text-[#00D4AA]';
+                amountEl.textContent = `+$${amount.toFixed(2)}`;
+                amountEl.className = 'text-4xl font-mono font-bold mb-4 text-[#00D4AA]';
+            } else {
+                content.className = 'binary-card rounded-xl p-6 max-w-sm w-full mx-4 transform transition-all duration-300 result-loss';
+                icon.textContent = '❌';
+                title.textContent = 'Trade Lost';
+                title.className = 'text-2xl font-black mb-2 text-[#FF4757]';
+                amountEl.textContent = `-$${Math.abs(amount).toFixed(2)}`;
+                amountEl.className = 'text-4xl font-mono font-bold mb-4 text-[#FF4757]';
+            }
+            
+            details.textContent = `${pair} ${signal} @ ${new Date().toLocaleTimeString()}`;
+            
+            setTimeout(() => {
+                content.classList.remove('scale-95', 'opacity-0');
+                content.classList.add('scale-100', 'opacity-100');
+            }, 10);
+        }
+
+        function closeResult() {
+            const modal = document.getElementById('resultModal');
+            const content = document.getElementById('resultContent');
+            content.classList.add('scale-95', 'opacity-0');
+            setTimeout(() => modal.classList.add('hidden'), 300);
+        }
+
+        function addToHistory(pair, signal, profit, won) {
+            const history = document.getElementById('tradeHistory');
+            const time = new Date().toLocaleTimeString('en-US', {hour12: false, hour: '2-digit', minute:'2-digit'});
+            
+            const item = document.createElement('div');
+            item.className = 'flex justify-between items-center p-2 rounded text-xs border-l-2 ' + 
+                (won ? 'bg-[#00D4AA]/10 border-[#00D4AA]' : 'bg-[#FF4757]/10 border-[#FF4757]');
+            item.innerHTML = `
+                <div class="flex items-center space-x-2">
+                    <span class="font-bold text-white">${pair}</span>
+                    <span class="${signal === 'CALL' ? 'text-[#00D4AA]' : 'text-[#FF4757]'}">${signal}</span>
+                </div>
+                <div class="flex items-center space-x-3">
+                    <span class="text-gray-500">${time}</span>
+                    <span class="font-mono font-bold ${won ? 'text-[#00D4AA]' : 'text-[#FF4757]'}">
+                        ${won ? '+' : ''}$${Math.abs(profit).toFixed(2)}
+                    </span>
+                </div>
+            `;
+            
+            history.insertBefore(item, history.firstChild);
+            tradeHistory.push({pair, signal, profit, won, time});
+        }
+
+        function clearHistory() {
+            document.getElementById('tradeHistory').innerHTML = '';
+            tradeHistory = [];
+        }
+
+        function updateStats() {
+            const wins = tradeHistory.filter(t => t.won).length;
+            const total = tradeHistory.length;
+            const rate = total > 0 ? ((wins / total) * 100).toFixed(1) : 87.4;
+            document.getElementById('dailyWinRate').textContent = rate + '%';
+            
+            let streak = 0;
+            for(let i = tradeHistory.length - 1; i >= 0; i--) {
+                if(tradeHistory[i].won) streak++;
+                else break;
+            }
+            document.getElementById('currentStreak').textContent = streak > 0 ? `${streak} Wins 🔥` : '0 Wins';
+        }
+
+        function useInCalculator(pair, signal, payout) {
+            document.getElementById('quickPair').value = pair;
+            document.getElementById('mgPayout').value = payout;
+            calculateMartingale();
+            showNotification(`Calculator updated for ${pair}`, 'success');
+        }
+
+        function initBinaryChart() {
+            const ctx = document.getElementById('binaryPerformanceChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: strategies.map(s => s.name.split(' ')[0]),
+                    datasets: [{
+                        label: 'Win Rate %',
+                        data: strategies.map(s => s.accuracy),
+                        backgroundColor: [
+                            'rgba(0, 212, 170, 0.8)',
+                            'rgba(255, 215, 0, 0.8)',
+                            'rgba(168, 85, 247, 0.8)',
+                            'rgba(0, 212, 170, 0.6)',
+                            'rgba(255, 215, 0, 0.6)',
+                            'rgba(168, 85, 247, 0.6)'
+                        ],
+                        borderRadius: 4,
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false }
+                    },
+                    scales: {
+                        y: {
+                            grid: { color: 'rgba(255, 255, 255, 0.05)' },
+                            ticks: { color: '#6B7280', font: { size: 10 } },
+                            min: 70,
+                            max: 100
+                        },
+                        x: {
+                            grid: { display: false },
+                            ticks: { color: '#6B7280', font: { size: 9 } }
+                        }
+                    }
+                }
+            });
+        }
+
+        function startCandleTimer() {
+            setInterval(() => {
+                const now = new Date();
+                const seconds = 60 - now.getSeconds();
+                document.getElementById('nextCandle').textContent = `0:${seconds.toString().padStart(2, '0')}`;
+                
+                document.querySelectorAll('[id^="timer-"]').forEach((timer, idx) => {
+                    if(timer && currentSignals[idx]) {
+                        const remaining = Math.max(0, (currentSignals[idx].expiryTime - Date.now()) / 1000);
+                        const percent = (remaining / currentTF) * 100;
+                        timer.style.width = percent + '%';
+                    }
+                });
+            }, 1000);
+        }
+
+        function simulateMarketUpdates() {
+            setInterval(() => {
+                if(Math.random() > 0.7) {
+                    const idx = Math.floor(Math.random() * currentSignals.length);
+                    currentSignals[idx].confidence = Math.min(95, Math.max(70, currentSignals[idx].confidence + (Math.random() > 0.5 ? 2 : -2)));
+                    currentSignals[idx].strength = Math.min(100, Math.max(50, currentSignals[idx].strength + (Math.random() > 0.5 ? 3 : -3)));
+                    renderBinarySignals(document.querySelector('.binary-filter.bg-\\[\\#00D4AA\\]')?.dataset.filter || 'all');
+                }
+            }, 5000);
+        }
+
+        function connectPocketOption() {
+            showNotification('Connecting to Pocket Option...', 'info');
+            setTimeout(() => {
+                showNotification('Connected to Pocket Option Demo Account', 'success');
+            }, 1500);
+        }
+
+        function showNotification(message, type) {
+            const notif = document.createElement('div');
+            notif.className = `fixed top-20 right-4 px-4 py-3 rounded-lg text-sm font-bold transform translate-x-full transition-transform duration-300 z-50 flex items-center space-x-2 ${
+                type === 'success' ? 'bg-[#00D4AA] text-black' : 
+                type === 'error' ? 'bg-[#FF4757] text-white' : 
+                'bg-[#FFD700] text-black'
+            }`;
+            notif.innerHTML = `<span>${message}</span>`;
+            document.body.appendChild(notif);
+            
+            setTimeout(() => notif.classList.remove('translate-x-full'), 100);
+            setTimeout(() => {
+                notif.classList.add('translate-x-full');
+                setTimeout(() => notif.remove(), 300);
+            }, 3000);
+        }
+
+        function pauseNews() {
+            document.querySelector('.news-ticker').style.display = 'none';
+        }
+
+        document.addEventListener('keydown', (e) => {
+            if(e.key === 'c') filterBinarySignals('call');
+            if(e.key === 'p') filterBinarySignals('put');
+            if(e.key === 'Escape') {
+                closeResult();
+                filterBinarySignals('all');
+            }
+            if(e.key === 'm') document.getElementById('martingaleMode').click();
+        });
+    </script>
+</body>
+</html>
